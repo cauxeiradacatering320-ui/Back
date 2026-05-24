@@ -19,7 +19,7 @@ const app = fastify({
 
 // Registrar Plugins
 app.register(cors, {
-  origin: true,
+  origin: ["http://localhost:3000","https://front-ashy-ten-79.vercel.app"],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

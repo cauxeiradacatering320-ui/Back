@@ -5,8 +5,12 @@ import multipart from '@fastify/multipart';
 import { authRoutes } from './routes/auth.routes';
 import { adminModuloRoutes, publicModuloRoutes } from './routes/modulo.routes';
 import { adminConteudoRoutes } from './routes/conteudo.routes';
+import { adminUsuarioRoutes } from './routes/usuario.routes';
+import { adminAcessoRoutes } from './routes/acesso.routes';
 import { webhookRoutes } from './routes/webhook.routes';
 import { videoPlaybackRoutes } from './routes/video-playback.routes';
+import { meusModulosRoutes } from './routes/meus-modulos.routes';
+import { studentConteudoRoutes } from './routes/student-conteudo.routes';
 
 const app = fastify({
   logger: true,
@@ -36,9 +40,13 @@ app.register(multipart, {
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(adminModuloRoutes, { prefix: '/api/admin/modulos' });
 app.register(adminConteudoRoutes, { prefix: '/api/admin/modulos' });
+app.register(adminUsuarioRoutes, { prefix: '/api/admin/usuarios' });
+app.register(adminAcessoRoutes, { prefix: '/api/admin/usuarios' });
 app.register(publicModuloRoutes, { prefix: '/api/modulos' });
 app.register(webhookRoutes, { prefix: '/webhooks' });
 app.register(videoPlaybackRoutes, { prefix: '/api/videos' });
+app.register(meusModulosRoutes, { prefix: '/api/meus-modulos' });
+app.register(studentConteudoRoutes, { prefix: '/api/modulos' });
 
 const start = async () => {
   try {

@@ -40,31 +40,6 @@ CREATE TYPE status_acesso AS ENUM (
 );
 
 
-
--- =====================================================
--- USUÁRIOS
--- =====================================================
-
-CREATE TABLE usuarios (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  nome TEXT NOT NULL,
-  email TEXT NOT NULL UNIQUE,
-  senha_hash TEXT NOT NULL,
-
-  role role_user NOT NULL DEFAULT 'aluno',
-
-  foto_url TEXT,
-
-  ativo BOOLEAN NOT NULL DEFAULT TRUE,
-
-  criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
-  atualizado_em TIMESTAMP NOT NULL DEFAULT NOW(),
-  deletado_em TIMESTAMP
-);
-
-
-
 -- =====================================================
 -- SESSÕES / REFRESH TOKENS
 -- =====================================================
@@ -89,6 +64,31 @@ CREATE TABLE sessoes (
 
 CREATE INDEX idx_sessoes_usuario
 ON sessoes(usuario_id);
+
+
+
+-- =====================================================
+-- USUÁRIOS
+-- =====================================================
+
+CREATE TABLE usuarios (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  nome TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  senha_hash TEXT NOT NULL,
+  telefone NUMERIC UNIQUE,
+
+  role role_user NOT NULL DEFAULT 'aluno',
+
+  foto_url TEXT,
+
+  ativo BOOLEAN NOT NULL DEFAULT TRUE,
+
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+  atualizado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+  deletado_em TIMESTAMP
+);
 
 
 
@@ -246,7 +246,9 @@ CREATE TABLE acessos_modulo (
 
   expira_em TIMESTAMP,
 
-  criado_em TIMESTAMP NOT NULL DEFAULT NOW()
+  criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+
+  origem_acesso TEXT NOT NULL DEFAULT 'compra'
 );
 
 CREATE INDEX idx_acessos_usuario

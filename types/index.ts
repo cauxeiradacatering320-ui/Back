@@ -7,6 +7,7 @@ export interface UserData {
   id: string;
   nome: string;
   email: string;
+  telefone: string | null;
   role: 'admin' | 'produtor' | 'aluno';
 }
 

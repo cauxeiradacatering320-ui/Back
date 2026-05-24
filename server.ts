@@ -11,6 +11,10 @@ import { webhookRoutes } from './routes/webhook.routes';
 import { videoPlaybackRoutes } from './routes/video-playback.routes';
 import { meusModulosRoutes } from './routes/meus-modulos.routes';
 import { studentConteudoRoutes } from './routes/student-conteudo.routes';
+import { adminCompraManualRoutes } from './routes/compra-manual.routes';
+import { minhasComprasRoutes } from './routes/minhas-compras.routes';
+import { adminDashboardRoutes } from './routes/dashboard.routes';
+import { adminPagamentoRoutes } from './routes/pagamento.routes';
 
 const app = fastify({
   logger: true,
@@ -37,6 +41,9 @@ app.register(multipart, {
 });
 
 // Registrar Rotas
+app.get('/', async(request,reply) =>{
+  return {mensagem:"Api rodando!"}
+})
 app.register(authRoutes, { prefix: '/api/auth' });
 app.register(adminModuloRoutes, { prefix: '/api/admin/modulos' });
 app.register(adminConteudoRoutes, { prefix: '/api/admin/modulos' });
@@ -47,6 +54,10 @@ app.register(webhookRoutes, { prefix: '/webhooks' });
 app.register(videoPlaybackRoutes, { prefix: '/api/videos' });
 app.register(meusModulosRoutes, { prefix: '/api/meus-modulos' });
 app.register(studentConteudoRoutes, { prefix: '/api/modulos' });
+app.register(adminCompraManualRoutes, { prefix: '/api/admin/usuarios' });
+app.register(adminDashboardRoutes, { prefix: '/api/admin/dashboard' });
+app.register(adminPagamentoRoutes, { prefix: '/api/admin/pagamentos' });
+app.register(minhasComprasRoutes, { prefix: '/api/minhas-compras' });
 
 const start = async () => {
   try {

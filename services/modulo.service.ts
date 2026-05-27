@@ -8,6 +8,7 @@ export interface CreateModuloData {
   preco_centavos: number;
   gratuito: boolean;
   duracao_acesso_dias?: number;
+  carga_horaria?: number;
   status: 'rascunho' | 'publicado' | 'arquivado';
   thumbnail_url?: string;
 }
@@ -18,6 +19,7 @@ export interface UpdateModuloData {
   preco_centavos: number;
   gratuito: boolean;
   duracao_acesso_dias: number | null;
+  carga_horaria: number | null;
   status: 'rascunho' | 'publicado' | 'arquivado';
 }
 
@@ -32,6 +34,7 @@ export interface ModuloRow {
   moeda: string;
   gratuito: boolean;
   duracao_acesso_dias: number | null;
+  carga_horaria: number | null;
   status: 'rascunho' | 'publicado' | 'arquivado';
   criado_em: string;
   atualizado_em: string;
@@ -48,8 +51,8 @@ export class ModuloService {
     }
 
     const result = await query(
-      `INSERT INTO modulos (produtor_id, titulo, slug, descricao, preco_centavos, gratuito, duracao_acesso_dias, status, thumbnail_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO modulos (produtor_id, titulo, slug, descricao, preco_centavos, gratuito, duracao_acesso_dias, carga_horaria, status, thumbnail_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         produtorId,
@@ -59,6 +62,7 @@ export class ModuloService {
         data.preco_centavos,
         data.gratuito,
         data.duracao_acesso_dias || null,
+        data.carga_horaria || null,
         data.status,
         data.thumbnail_url || null,
       ]
@@ -79,9 +83,9 @@ export class ModuloService {
       `UPDATE modulos SET
         titulo = $1, slug = $2, descricao = $3,
         preco_centavos = $4, gratuito = $5,
-        duracao_acesso_dias = $6, status = $7,
+        duracao_acesso_dias = $6, carga_horaria = $7, status = $8,
         atualizado_em = NOW()
-       WHERE id = $8 AND deletado_em IS NULL
+       WHERE id = $9 AND deletado_em IS NULL
        RETURNING *`,
       [
         data.titulo,
@@ -90,6 +94,7 @@ export class ModuloService {
         data.preco_centavos,
         data.gratuito,
         data.duracao_acesso_dias,
+        data.carga_horaria,
         data.status,
         id,
       ]
@@ -120,6 +125,14 @@ export class ModuloService {
       [id]
     );
     return (result.rows[0] as ModuloRow) || null;
+  }
+
+  static async countStudents(moduloId: string): Promise<number> {
+    const result = await query(
+      'SELECT COUNT(DISTINCT usuario_id)::int as count FROM acessos_modulo WHERE modulo_id = $1',
+      [moduloId]
+    );
+    return result.rows[0].count as number;
   }
 
   static async findPublicById(id: string): Promise<ModuloRow | null> {

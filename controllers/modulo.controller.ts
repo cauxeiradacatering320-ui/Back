@@ -42,6 +42,7 @@ export async function createModulo(request: FastifyRequest, reply: FastifyReply)
       preco_centavos: Number(fields.preco_centavos),
       gratuito: fields.gratuito === 'true',
       duracao_acesso_dias: fields.duracao_acesso_dias ? Number(fields.duracao_acesso_dias) : undefined,
+      carga_horaria: fields.carga_horaria ? Number(fields.carga_horaria) : undefined,
       status: (fields.status as 'rascunho' | 'publicado') || 'rascunho',
       thumbnail_url,
     };
@@ -103,7 +104,9 @@ export async function getModulo(
       return reply.status(404).send({ error: 'Módulo não encontrado' });
     }
 
-    return reply.send(modulo);
+    const total_alunos = await ModuloService.countStudents(request.params.id);
+
+    return reply.send({ ...modulo, total_alunos });
   } catch (error: any) {
     return reply.status(500).send({ error: error.message });
   }

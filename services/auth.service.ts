@@ -13,7 +13,7 @@ interface DbUser {
 }
 
 export class AuthService {
-  static async register(nome: string, email: string, senha_plana: string) {
+  static async register(nome: string, email: string, senha_plana: string, telefone?: string) {
     const resCheck = await query('SELECT id FROM usuarios WHERE email = $1', [email]);
     if (resCheck.rows.length > 0) {
       throw new Error('Email já está em uso');
@@ -21,9 +21,11 @@ export class AuthService {
 
     const senha_hash = await hashPassword(senha_plana);
 
+    const telefoneLimpo = telefone ? telefone.replace(/\D/g, '') : null;
+
     const resInsert = await query(
-      'INSERT INTO usuarios (nome, email, senha_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, nome, email, role',
-      [nome, email, senha_hash, 'aluno']
+      'INSERT INTO usuarios (nome, email, senha_hash, role, telefone) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, role',
+      [nome, email, senha_hash, 'aluno', telefoneLimpo]
     );
 
     return resInsert.rows[0] as UserData;
@@ -139,6 +141,78 @@ export class AuthService {
     }
 
     return resSession.rows[0] as UserData;
+  }
+
+  static async updateProfile(userId: string, data: { nome?: string; email?: string; telefone?: string | null }) {
+    if (data.email) {
+      const emailExists = await query(
+        'SELECT id FROM usuarios WHERE email = $1 AND id != $2',
+        [data.email, userId]
+      );
+      if (emailExists.rows.length > 0) {
+        throw new Error('Email já está em uso');
+      }
+    }
+
+    if (data.telefone) {
+      const telExists = await query(
+        'SELECT id FROM usuarios WHERE telefone = $1 AND id != $2',
+        [data.telefone, userId]
+      );
+      if (telExists.rows.length > 0) {
+        throw new Error('Telefone já está em uso');
+      }
+    }
+
+    const sets: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (data.nome !== undefined) {
+      sets.push(`nome = $${idx++}`);
+      params.push(data.nome);
+    }
+    if (data.email !== undefined) {
+      sets.push(`email = $${idx++}`);
+      params.push(data.email);
+    }
+    if (data.telefone !== undefined) {
+      sets.push(`telefone = $${idx++}`);
+      params.push(data.telefone);
+    }
+
+    if (sets.length === 0) return null;
+
+    sets.push(`atualizado_em = NOW()`);
+    params.push(userId);
+
+    const result = await query(
+      `UPDATE usuarios SET ${sets.join(', ')} WHERE id = $${idx} AND deletado_em IS NULL RETURNING id, nome, email, telefone, role`,
+      params
+    );
+
+    return (result.rows[0] as UserData & { telefone: string | null }) || null;
+  }
+
+  static async changePassword(userId: string, senhaAtual: string, novaSenha: string) {
+    const res = await query('SELECT senha_hash FROM usuarios WHERE id = $1', [userId]);
+    if (res.rows.length === 0) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    const isMatch = await comparePassword(senhaAtual, res.rows[0].senha_hash);
+    if (!isMatch) {
+      throw new Error('Senha atual incorreta');
+    }
+
+    const novaSenhaHash = await hashPassword(novaSenha);
+    await query('UPDATE usuarios SET senha_hash = $1, atualizado_em = NOW() WHERE id = $2', [novaSenhaHash, userId]);
+
+    await query(
+      `UPDATE sessoes SET revogado_em = CURRENT_TIMESTAMP
+       WHERE usuario_id = $1 AND revogado_em IS NULL`,
+      [userId]
+    );
   }
 
   static async logout(refreshToken: string) {

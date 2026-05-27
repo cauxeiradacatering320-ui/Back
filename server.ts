@@ -15,6 +15,7 @@ import { adminCompraManualRoutes } from './routes/compra-manual.routes';
 import { minhasComprasRoutes } from './routes/minhas-compras.routes';
 import { adminDashboardRoutes } from './routes/dashboard.routes';
 import { adminPagamentoRoutes } from './routes/pagamento.routes';
+import { certificadoRoutes } from './routes/certificado.routes';
 
 const app = fastify({
   logger: true,
@@ -58,6 +59,7 @@ app.register(adminCompraManualRoutes, { prefix: '/api/admin/usuarios' });
 app.register(adminDashboardRoutes, { prefix: '/api/admin/dashboard' });
 app.register(adminPagamentoRoutes, { prefix: '/api/admin/pagamentos' });
 app.register(minhasComprasRoutes, { prefix: '/api/minhas-compras' });
+app.register(certificadoRoutes, { prefix: '/api/certificados' });
 
 const start = async () => {
   try {

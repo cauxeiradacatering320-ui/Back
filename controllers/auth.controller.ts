@@ -19,8 +19,8 @@ const ROLE_COOKIE_OPTIONS = {
 
 export async function register(request: FastifyRequest, reply: FastifyReply) {
   try {
-    const { nome, email, senha } = request.body as any;
-    const user = await AuthService.register(nome, email, senha);
+    const { nome, email, senha, telefone } = request.body as any;
+    const user = await AuthService.register(nome, email, senha, telefone);
 
     const ip = request.ip;
     const userAgent = request.headers['user-agent'] || '';
@@ -48,6 +48,7 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({ user, accessToken });
   } catch (error: any) {
+    console.log("error", error)
     return reply.status(401).send({ error: error.message });
   }
 }
@@ -70,8 +71,8 @@ export async function refresh(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({ user, accessToken });
   } catch (error: any) {
-    reply.clearCookie('refresh_token', { path: '/' });
-    reply.clearCookie('user_role', { path: '/' });
+    reply.clearCookie('refresh_token', { path: '/', sameSite: 'lax' });
+    reply.clearCookie('user_role', { path: '/', sameSite: 'lax' });
     return reply.status(401).send({ error: error.message });
   }
 }
@@ -87,14 +88,54 @@ export async function verifySession(request: FastifyRequest, reply: FastifyReply
     const user = await AuthService.verifySession(refreshToken);
 
     if (!user) {
-      reply.clearCookie('refresh_token', { path: '/' });
-      reply.clearCookie('user_role', { path: '/' });
+      reply.clearCookie('refresh_token', { path: '/', sameSite: 'lax' });
+      reply.clearCookie('user_role', { path: '/', sameSite: 'lax' });
       return reply.status(401).send({ valid: false, error: 'Sessão expirada ou revogada' });
     }
 
     return reply.send({ valid: true, user });
   } catch (error: any) {
     return reply.status(500).send({ error: error.message });
+  }
+}
+
+export async function changePassword(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { senha_atual, nova_senha } = request.body as any;
+    const userId = request.user!.id;
+
+    if (!senha_atual || !nova_senha) {
+      return reply.status(400).send({ error: 'Senha atual e nova senha são obrigatórias' });
+    }
+
+    if (nova_senha.length < 6) {
+      return reply.status(400).send({ error: 'Nova senha deve ter no mínimo 6 caracteres' });
+    }
+
+    await AuthService.changePassword(userId, senha_atual, nova_senha);
+
+    reply.clearCookie('refresh_token', { path: '/' });
+    reply.clearCookie('user_role', { path: '/' });
+
+    return reply.send({ message: 'Senha alterada com sucesso. Faça login novamente.' });
+  } catch (error: any) {
+    return reply.status(400).send({ error: error.message });
+  }
+}
+
+export async function updateProfile(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = request.user!.id;
+    const { nome, email, telefone } = request.body as any;
+
+    const updated = await AuthService.updateProfile(userId, { nome, email, telefone });
+    if (!updated) {
+      return reply.status(400).send({ error: 'Nenhum dado para atualizar' });
+    }
+
+    return reply.send({ user: updated });
+  } catch (error: any) {
+    return reply.status(400).send({ error: error.message });
   }
 }
 

@@ -15,6 +15,7 @@ export interface ConteudoRow {
 
 export interface UpdateConteudoData {
   titulo?: string;
+  content?: string;
 }
 
 interface CreateVideoParams {
@@ -199,6 +200,11 @@ export class ConteudoService {
     if (data.titulo !== undefined) {
       sets.push(`titulo = $${idx++}`);
       values.push(data.titulo);
+    }
+
+    if (data.content !== undefined) {
+      sets.push(`dados = jsonb_set(COALESCE(dados, '{}'::jsonb), '{content}', $${idx++}::jsonb)`);
+      values.push(JSON.stringify(data.content));
     }
 
     if (sets.length === 0) return this.findById(id);

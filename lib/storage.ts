@@ -5,7 +5,7 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const bucketName = process.env.SUPABASE_BUCKET_MODULO || 'imageModulo';
+const bucketName = process.env.SUPABASE_BUCKET_MODULO|| 'imageModulo';
 
 let supabase: ReturnType<typeof createClient> | null = null;
 
@@ -34,6 +34,28 @@ export async function uploadImage(
 
   if (error) {
     throw new Error(`Erro ao fazer upload: ${error.message}`);
+  }
+
+  const { data: urlData } = client.storage.from(bucketName).getPublicUrl(uniqueName);
+
+  return urlData.publicUrl;
+}
+
+
+export async function uploadPDF(
+  buffer: Buffer,
+  fileName: string
+): Promise<string> {
+  const client = getClient();
+  const uniqueName = `${Date.now()}-${fileName}`;
+
+  const { error } = await client.storage.from(bucketName).upload(uniqueName, buffer, {
+    contentType: 'application/pdf',
+    upsert: true,
+  });
+
+  if (error) {
+    throw new Error(`Erro ao fazer upload do PDF: ${error.message}`);
   }
 
   const { data: urlData } = client.storage.from(bucketName).getPublicUrl(uniqueName);

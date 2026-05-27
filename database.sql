@@ -120,6 +120,7 @@ CREATE TABLE modulos (
   -- 365 dias
   -- NULL = vitalício
 
+  carga_horaria INTEGER,
   status status_modulo NOT NULL DEFAULT 'rascunho',
 
   criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -297,17 +298,12 @@ ON progresso_conteudo(usuario_id);
 
 CREATE TABLE certificados (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
   usuario_id UUID NOT NULL REFERENCES usuarios(id),
-
+  nome text,
   modulo_id UUID NOT NULL REFERENCES modulos(id),
-
   codigo TEXT NOT NULL UNIQUE,
-
   pdf_url TEXT,
-
   emitido_em TIMESTAMP NOT NULL DEFAULT NOW(),
-
   criado_em TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

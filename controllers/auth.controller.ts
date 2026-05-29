@@ -5,7 +5,7 @@ import { query } from '../lib/db';
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   path: '/',
   maxAge: 30 * 24 * 60 * 60,
 };
@@ -13,7 +13,7 @@ const REFRESH_COOKIE_OPTIONS = {
 const ROLE_COOKIE_OPTIONS = {
   httpOnly: false,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
   path: '/',
   maxAge: 30 * 24 * 60 * 60,
 };

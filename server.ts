@@ -23,8 +23,17 @@ const app = fastify({
 });
 
 // Registrar Plugins
+const corsOrigins = [
+  "http://localhost:3000",
+  "https://front-cauxeirada.vercel.app",
+  "https://front-ashy-ten-79.vercel.app",
+];
+if (process.env.FRONTEND_URL) {
+  corsOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.register(cors, {
-  origin: ["http://localhost:3000","https://front-cauxeirada.vercel.app","https://front-ashy-ten-79.vercel.app"],
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

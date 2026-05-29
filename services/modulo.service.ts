@@ -144,6 +144,13 @@ export class ModuloService {
     return (result.rows[0] as ModuloRow) || null;
   }
 
+  static async delete(id: string): Promise<void> {
+    await query(
+      'UPDATE modulos SET deletado_em = NOW() WHERE id = $1 AND deletado_em IS NULL',
+      [id]
+    );
+  }
+
   static async uploadThumbnail(
     moduloId: string,
     buffer: Buffer,

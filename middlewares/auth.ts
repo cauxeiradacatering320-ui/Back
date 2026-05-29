@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { verifyAccessToken } from '../utils/jwt';
+import { AuthService } from '../services/auth.service';
 import type { UserPayload } from '../types';
 
 declare module 'fastify' {
@@ -11,7 +12,6 @@ declare module 'fastify' {
 export const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const authHeader = request.headers.authorization;
-    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return reply.status(401).send({ error: 'Token não fornecido ou inválido' });
     }
@@ -20,6 +20,17 @@ export const authenticate = async (request: FastifyRequest, reply: FastifyReply)
     const decoded = verifyAccessToken(token);
     
     request.user = decoded;
+
+    const refreshToken = request.cookies.refresh_token;
+    if (refreshToken) {
+      const sessionUser = await AuthService.verifySession(refreshToken);
+      if (!sessionUser) {
+        await AuthService.logout(refreshToken);
+        reply.clearCookie('refresh_token', { path: '/' });
+        reply.clearCookie('user_role', { path: '/' });
+        return reply.status(401).send({ error: 'Sessão expirada ou revogada' });
+      }
+    }
   } catch (error) {
     return reply.status(401).send({ error: 'Token expirado ou inválido' });
   }

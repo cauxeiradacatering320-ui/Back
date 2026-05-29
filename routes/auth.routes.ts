@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { register, login, refresh, verifySession, logout, changePassword, updateProfile } from '../controllers/auth.controller';
+import { register, login, refresh, verifySession, logout, changePassword, updateProfile, me } from '../controllers/auth.controller';
 import { authenticate, requireAdmin } from '../middlewares/auth';
 
 export async function authRoutes(app: FastifyInstance) {
@@ -38,9 +38,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.post('/change-password', { preHandler: [authenticate] }, changePassword);
   app.put('/me', { preHandler: [authenticate] }, updateProfile);
 
-  app.get('/me', { preHandler: [authenticate] }, async (request, reply) => {
-    return reply.send({ user: request.user });
-  });
+  app.get('/me', { preHandler: [authenticate] }, me);
 
   app.get('/admin-only', { preHandler: [authenticate, requireAdmin] }, async (request, reply) => {
     return reply.send({ message: 'Você é um admin!' });

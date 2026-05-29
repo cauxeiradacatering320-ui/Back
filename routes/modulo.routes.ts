@@ -7,6 +7,7 @@ import {
   listPublicModulos,
   getModulo,
   getPublicModulo,
+  deleteModulo,
   uploadThumbnail,
 } from '../controllers/modulo.controller';
 
@@ -18,6 +19,7 @@ export async function adminModuloRoutes(app: FastifyInstance) {
   app.put('/:id', updateModulo);
   app.get('/', listModulos);
   app.get('/:id', getModulo);
+  app.delete('/:id', deleteModulo);
   app.post('/:id/thumbnail', uploadThumbnail);
 }
 

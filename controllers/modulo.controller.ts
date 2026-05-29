@@ -129,6 +129,23 @@ export async function getPublicModulo(
   }
 }
 
+export async function deleteModulo(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const modulo = await ModuloService.findById(request.params.id);
+    if (!modulo) {
+      return reply.status(404).send({ error: 'Módulo não encontrado' });
+    }
+
+    await ModuloService.delete(request.params.id);
+    return reply.send({ message: 'Módulo excluído com sucesso' });
+  } catch (error: any) {
+    return reply.status(400).send({ error: error.message });
+  }
+}
+
 export async function uploadThumbnail(
   request: FastifyRequest<{ Params: { id: string } }>,
   reply: FastifyReply

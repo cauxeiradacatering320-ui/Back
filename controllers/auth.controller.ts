@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { AuthService } from '../services/auth.service';
+import { query } from '../lib/db';
 
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -48,7 +49,6 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.send({ user, accessToken });
   } catch (error: any) {
-    console.log("error", error)
     return reply.status(401).send({ error: error.message });
   }
 }
@@ -56,7 +56,6 @@ export async function login(request: FastifyRequest, reply: FastifyReply) {
 export async function refresh(request: FastifyRequest, reply: FastifyReply) {
   try {
     const refreshToken = request.cookies.refresh_token;
-
     if (!refreshToken) {
       return reply.status(401).send({ error: 'Refresh token não fornecido' });
     }
@@ -80,13 +79,11 @@ export async function refresh(request: FastifyRequest, reply: FastifyReply) {
 export async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   try {
     const refreshToken = request.cookies.refresh_token;
-
     if (!refreshToken) {
-      return reply.status(401).send({ valid: false, error: 'Sessão não encontrada' });
+      return reply.status(401).send({ valid: false, error: 'Sessão não encontradawerw' });
     }
 
     const user = await AuthService.verifySession(refreshToken);
-
     if (!user) {
       reply.clearCookie('refresh_token', { path: '/', sameSite: 'lax' });
       reply.clearCookie('user_role', { path: '/', sameSite: 'lax' });
@@ -94,6 +91,21 @@ export async function verifySession(request: FastifyRequest, reply: FastifyReply
     }
 
     return reply.send({ valid: true, user });
+  } catch (error: any) {
+    return reply.status(500).send({ error: error.message });
+  }
+}
+
+export async function me(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const userId = request.user!.id;
+    const res = await query('SELECT id, nome, email, role FROM usuarios WHERE id = $1 AND deletado_em IS NULL', [userId]);
+
+    if (res.rows.length === 0) {
+      return reply.status(404).send({ error: 'Usuário não encontrado' });
+    }
+
+    return reply.send({ user: res.rows[0] });
   } catch (error: any) {
     return reply.status(500).send({ error: error.message });
   }

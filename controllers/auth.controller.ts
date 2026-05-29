@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { AuthService } from '../services/auth.service';
 import { query } from '../lib/db';
+import { verifyAccessToken } from '../utils/jwt';
 
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -79,18 +80,29 @@ export async function refresh(request: FastifyRequest, reply: FastifyReply) {
 export async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   try {
     const refreshToken = request.cookies.refresh_token;
-    if (!refreshToken) {
-      return reply.status(401).send({ valid: false, error: 'Sessão não encontradawerw' });
+
+    if (refreshToken) {
+      const user = await AuthService.verifySession(refreshToken);
+      if (!user) {
+        reply.clearCookie('refresh_token', { path: '/', sameSite: 'lax' });
+        reply.clearCookie('user_role', { path: '/', sameSite: 'lax' });
+        return reply.status(401).send({ valid: false, error: 'Sessão expirada ou revogada' });
+      }
+      return reply.send({ valid: true, user });
     }
 
-    const user = await AuthService.verifySession(refreshToken);
-    if (!user) {
-      reply.clearCookie('refresh_token', { path: '/', sameSite: 'lax' });
-      reply.clearCookie('user_role', { path: '/', sameSite: 'lax' });
-      return reply.status(401).send({ valid: false, error: 'Sessão expirada ou revogada' });
+    const authHeader = request.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = verifyAccessToken(token);
+      const res = await query('SELECT id, nome, email, role FROM usuarios WHERE id = $1 AND deletado_em IS NULL', [decoded.id]);
+      if (res.rows.length === 0) {
+        return reply.status(401).send({ valid: false, error: 'Usuário não encontrado' });
+      }
+      return reply.send({ valid: true, user: res.rows[0] });
     }
 
-    return reply.send({ valid: true, user });
+    return reply.status(401).send({ valid: false, error: 'Sessão não encontrada' });
   } catch (error: any) {
     return reply.status(500).send({ error: error.message });
   }
